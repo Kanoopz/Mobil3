@@ -8,7 +8,15 @@
 // Dynamic shim import for cross-platform compatibility
 const loadParaShim = async () => {
   try {
-    await import("@getpara/react-native-wallet/shim");
+    const { Platform } = require('react-native');
+    
+    if (Platform.OS !== 'web') {
+      // Only load shim on native platforms
+      await import("@getpara/react-native-wallet/shim");
+      console.log('Para shim loaded successfully for', Platform.OS);
+    } else {
+      console.log('Skipping Para shim for web platform');
+    }
   } catch (error) {
     console.warn('Para shim not available in this environment:', error);
   }
@@ -16,7 +24,7 @@ const loadParaShim = async () => {
 
 // Load shim immediately
 loadParaShim();
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, useColorScheme, View, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import {
@@ -24,6 +32,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { ParaProvider, Environment } from './src/components/ParaProvider';
+import { AuthScreen } from './src/components/AuthScreen';
 import { para } from './src/para';
 
 function App() {
@@ -71,18 +80,23 @@ function App() {
 
 function AppContent() {
   const safeAreaInsets = useSafeAreaInsets();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   return (
     <View style={[styles.container, { paddingTop: safeAreaInsets.top }]}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Mobil3App with Para SDK</Text>
-        <Text style={styles.subtitle}>
-          Para SDK integration with proper Relying Party ID configuration
-        </Text>
-        <Text style={styles.info}>
-          Check the console for configuration validation messages
-        </Text>
-      </View>
+      {isAuthenticated ? (
+        <View style={styles.content}>
+          <Text style={styles.title}>Mobil3App with Para SDK</Text>
+          <Text style={styles.subtitle}>
+            Para SDK integration with proper Relying Party ID configuration
+          </Text>
+          <Text style={styles.info}>
+            Check the console for configuration validation messages
+          </Text>
+        </View>
+      ) : (
+        <AuthScreen />
+      )}
     </View>
   );
 }
